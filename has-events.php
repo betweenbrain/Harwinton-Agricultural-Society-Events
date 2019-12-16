@@ -145,12 +145,11 @@ add_action(
 /**
  * Callback to render the settings field.
  */
-function google_maps_api_key_callback()
-{
-    $key = get_option('google_maps_api_key');
-    ?>
-    <input type="text" name="google_maps_api_key" value="<?php echo isset( $key ) ? esc_attr( $key ) : ''; ?>">
-    <?php
+function google_maps_api_key_callback() {
+	$key = get_option( 'google_maps_api_key' );
+	?>
+	<input type="text" name="google_maps_api_key" value="<?php echo isset( $key ) ? esc_attr( $key ) : ''; ?>">
+	<?php
 }
 
 /**
@@ -176,8 +175,6 @@ add_action( 'location_edit_form', 'add_script', 10, 1 );
 add_action( 'location_add_form', 'add_script', 10, 1 );
 
 function add_script( $term ) {
-	$key = get_option('google_maps_api_key');
-	$latLng = property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : '';
 	?>
 	<style>
 		#map {
@@ -187,54 +184,45 @@ function add_script( $term ) {
 	</style>
 	<script>
 		const input = document.getElementById('latLng');
-		const latLng = '<?php echo $latLng; ?>';
+		const savedValue = '<?php echo property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : ''; ?>';
 
 		function initMap() {
 			const map = new google.maps.Map(document.getElementById('map'), {
 				center: { lat: 41.763031, lng: -73.044465 },
 				zoom: 17.75
 			});
-			// TODO: Refactor methods into one.
 
 			/** 
 			* Render saved marker
 			*/ 
-			if(latLng){
-				const cords = latLng.replace('(', '').replace(')', '').split(',');
-				const marker = new google.maps.Marker({
-					position: new google.maps.LatLng(cords[0], cords[1]),
-					map: map,
-				});
-
-				google.maps.event.addListener(marker, 'click', function () {
-					marker.setMap(null);
-					input.setAttribute('value', '');
-				});
+			if(savedValue){
+				const cords = savedValue.replace('(', '').replace(')', '').split(',');
+				addMarker(new google.maps.LatLng(cords[0], cords[1]), map);
 			}
 
 			google.maps.event.addListener(map, 'click', function (event) {
 				// TODO: Unset other markers.
 
-				/** 
-				* Add a new marker
-				*/
-				const marker = new google.maps.Marker({
-					position: event.latLng,
-					map: map,
-				});
-
 				// Update hidden field
 				input.setAttribute('value', event.latLng);
+				addMarker(event.latLng, map);
+			});
+		}
 
-				// Remove existing marker if clicked
-				google.maps.event.addListener(marker, 'click', function () {
-					marker.setMap(null);
-					input.setAttribute('value', '');
-				});
+		function addMarker(position, map){
+			const marker = new google.maps.Marker({
+				position,
+				map
+			});
+
+			// Remove existing marker if clicked
+			google.maps.event.addListener(marker, 'click', function () {
+				marker.setMap(null);
+				input.setAttribute('value', '');
 			});
 		}
 	</script>
-	<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo $key ?>&callback=initMap" async defer></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo get_option( 'google_maps_api_key' ); ?>&callback=initMap"async defer></script>
 	<?php
 }
 
