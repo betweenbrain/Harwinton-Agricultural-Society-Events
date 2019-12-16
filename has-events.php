@@ -184,6 +184,7 @@ function add_script( $term ) {
 	</style>
 	<script>
 		const input = document.getElementById('latLng');
+		const markers = [];
 		const savedValue = '<?php echo property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : ''; ?>';
 
 		function initMap() {
@@ -192,28 +193,33 @@ function add_script( $term ) {
 				zoom: 17.75
 			});
 
-			/** 
-			* Render saved marker
-			*/ 
+			/* Render saved marker */ 
 			if(savedValue){
 				const cords = savedValue.replace('(', '').replace(')', '').split(',');
 				addMarker(new google.maps.LatLng(cords[0], cords[1]), map);
 			}
 
+			/* Add new marker when clicking the map */
 			google.maps.event.addListener(map, 'click', function (event) {
-				// TODO: Unset other markers.
-
-				// Update hidden field
 				input.setAttribute('value', event.latLng);
 				addMarker(event.latLng, map);
 			});
 		}
 
 		function addMarker(position, map){
+			// Ensures only one marker exists on the map.
+			if(markers.length){
+				markers.forEach(marker => {
+					marker.setMap(null);
+				});
+			}
+
 			const marker = new google.maps.Marker({
 				position,
 				map
 			});
+
+			markers.push(marker);
 
 			// Remove existing marker if clicked
 			google.maps.event.addListener(marker, 'click', function () {
