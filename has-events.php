@@ -118,6 +118,42 @@ add_action(
 );
 
 /**
+ * Add Google Maps API options field
+ */
+add_action(
+	'admin_init', function() {
+		// Register the setting.
+		register_setting(
+			'general',
+			'google_maps_api_key',
+			array(
+				'string',
+				'Google MAPS API Key',
+			)
+		);
+
+		// Add setting field to admin general settings.
+		add_settings_field(
+			'google_maps_api_key',
+			'Google MAPS API Key',
+			'google_maps_api_key_callback',
+			'general'
+		);
+	}
+);
+
+/**
+ * Callback to render the settings field.
+ */
+function google_maps_api_key_callback()
+{
+    $key = get_option('google_maps_api_key');
+    ?>
+    <input type="text" name="google_maps_api_key" value="<?php echo isset( $key ) ? esc_attr( $key ) : ''; ?>">
+    <?php
+}
+
+/**
  * Render field when creating and editing taxonomy.
  *
  * https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/
@@ -140,6 +176,7 @@ add_action( 'location_edit_form', 'add_script', 10, 1 );
 add_action( 'location_add_form', 'add_script', 10, 1 );
 
 function add_script( $term ) {
+	$key = get_option('google_maps_api_key');
 	$latLng = property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : '';
 	?>
 	<style>
@@ -197,9 +234,7 @@ function add_script( $term ) {
 			});
 		}
 	</script>
-	<script src="https://maps.googleapis.com/maps/api/js?key=[API KEY GOES HERE]&callback=initMap"
-		async defer></script>
-
+	<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo $key ?>&callback=initMap" async defer></script>
 	<?php
 }
 
