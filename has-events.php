@@ -12,30 +12,31 @@
   */
 add_action(
 	'init', function () {
-		$args = array(
-			'has_archive'       => true,
-			'labels'            => array(
-				'add_new'      => __( 'Add Activity', 'hasEvents' ),
-				'add_new_item' => __( 'New Activity', 'hasEvents' ),
-				'all_items'    => __( 'Activities', 'hasEvents' ),
-				'edit_item'    => __( 'Edit Activity', 'hasEvents' ),
-				'name'         => __( 'Events', 'hasEvents' ),
-			),
-			'public'            => true,
-			'show_in_nav_menus' => true,
-			'supports'          => array(
-				'editor',
-				'excerpt',
-				'revisions',
-				'title',
-				'thumbnail',
-			),
-			'taxonomies'        => array(
-				'events',
-				'locations',
-			),
+		register_post_type(
+			'activity', array(
+				'has_archive'       => true,
+				'labels'            => array(
+					'add_new'      => __( 'Add Activity', 'hasEvents' ),
+					'add_new_item' => __( 'New Activity', 'hasEvents' ),
+					'all_items'    => __( 'Activities', 'hasEvents' ),
+					'edit_item'    => __( 'Edit Activity', 'hasEvents' ),
+					'name'         => __( 'Events', 'hasEvents' ),
+				),
+				'public'            => true,
+				'show_in_nav_menus' => true,
+				'supports'          => array(
+					'editor',
+					'excerpt',
+					'revisions',
+					'title',
+					'thumbnail',
+				),
+				'taxonomies'        => array(
+					'events',
+					'locations',
+				),
+			)
 		);
-		register_post_type( 'activity', $args );
 	}
 );
 
