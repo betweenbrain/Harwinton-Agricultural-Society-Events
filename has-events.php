@@ -119,7 +119,7 @@ add_action(
 );
 
 /**
- * Add Google Maps API options field
+ * Add Google Maps API key settings field.
  */
 add_action(
 	'admin_init', function() {
@@ -154,7 +154,7 @@ function google_maps_api_key_callback() {
 }
 
 /**
- * Render field when creating and editing taxonomy.
+ * Adds hidden Google Map latitude and longitude taxonomy field.
  *
  * https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/
  */
@@ -164,7 +164,7 @@ add_action( 'location_edit_form_fields', 'render_map', 10, 1 );
 function render_map( $term ) {
 	?>
 	<div class="form-field term-location-wrap">
-	<div id="map"></div>
+		<div id="map"></div>
 		<label for="latLng">Location</label>
 		<input type="hidden" name="latLng" id="latLng" value="<?php echo property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : ''; ?>" >
 		<p>Click the map to set the exact location.</p>
@@ -172,6 +172,9 @@ function render_map( $term ) {
 	<?php
 }
 
+/**
+ * Render Google Map in admin for choosing location.
+ */
 add_action( 'location_edit_form', 'add_script', 10, 1 );
 add_action( 'location_add_form', 'add_script', 10, 1 );
 
@@ -234,7 +237,7 @@ function add_script( $term ) {
 }
 
 /**
- * Save latLang when created
+ * Save latLang when creating location.
  */
 add_action( 'created_location', 'save_latLang', 10, 1 );
 
@@ -245,7 +248,7 @@ function save_latLang( $term_id ) {
 }
 
 /**
- * Save latLang when editing
+ * Save latLang when editing location.
  */
 add_action( 'edited_location', 'update_latLng', 10, 1 );
 
