@@ -41,6 +41,90 @@ add_action(
 );
 
 /**
+ * Adds meta boxes to activites.
+ */
+add_action(
+	'add_meta_boxes',
+	function () {
+		add_meta_box(
+			'details', // $id
+			'Activity Dates', // $title
+			'show_meta_boxes', // $callback
+			'activity', // $screen
+			'normal', // $context
+			'high' // $priority
+		);
+	}
+);
+
+/**
+ * Add fields to custom meta box.
+ */
+function show_meta_boxes() {
+	?>
+	<input type="hidden" name="events_meta_box_nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ); ?>">
+	<p>
+		<label for="begin">Begins
+			<input type="datetime" name="begin" id="begin" class="regular-text" value="<?php echo get_value( 'begin' ); ?>" required>
+		</label>
+	</p>
+	<p>
+		<label for="end">Ends
+			<input type="datetime" name="end" id="end" class="regular-text" value="<?php echo get_value( 'end' ); ?>">
+		</label>
+	</p>
+	<?php
+}
+
+/**
+ * Helper to properly return the meta value without throwing errors when not set.
+ */
+function get_value( $field ) {
+	global $post;
+	$meta = get_post_meta( $post->ID );
+	return ( is_array( $meta ) && isset( $meta[ $field ] ) ) ? $meta[ $field ][0] : null;
+}
+
+/**
+ * Enable saving of custom fields.
+ */
+add_action(
+	'save_post', function ( $post_id ) {
+		// verify nonce
+		if ( array_key_exists( 'events_meta_box_nonce', $_POST ) && ! wp_verify_nonce( $_POST['events_meta_box_nonce'], basename( __FILE__ ) ) ) {
+			return $post_id;
+		}
+		// check autosave
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return $post_id;
+		}
+		// check permissions
+		if ( array_key_exists( 'post_type', $_POST ) && 'page' === $_POST['post_type'] ) {
+			if ( ! current_user_can( 'edit_page', $post_id ) ) {
+				return $post_id;
+			} elseif ( ! current_user_can( 'edit_post', $post_id ) ) {
+				return $post_id;
+			}
+		}
+
+		if ( array_key_exists( 'begin', $_POST ) && array_key_exists( 'end', $_POST ) ) {
+			$fields = array( 'begin', 'end' );
+
+			foreach ( $fields as $field ) {
+				$old = get_post_meta( $post_id, $field, true );
+				$new = $_POST[ $field ];
+
+				if ( $new && $new !== $old ) {
+					update_post_meta( $post_id, $field, $new );
+				} elseif ( '' === $new && $old ) {
+					delete_post_meta( $post_id, $field, $old );
+				}
+			}
+		}
+	}
+);
+
+/**
  * Register Location taxonomy.
  */
 add_action(
