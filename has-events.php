@@ -65,7 +65,7 @@ function show_meta_boxes() {
 	<input type="hidden" name="events_meta_box_nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ); ?>">
 	<p>
 		<label for="begin">Begins
-			<input type="datetime-local" name="begin" id="begin" class="regular-text" value="<?php echo get_value( 'begin' ); ?>" required>
+			<input type="datetime-local" name="begin" id="begin" class="regular-text" value="<?php echo get_value( 'begin' ); ?>">
 		</label>
 	</p>
 	<p>
