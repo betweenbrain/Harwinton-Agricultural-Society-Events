@@ -61,67 +61,102 @@ add_action(
  * Add fields to custom meta box.
  */
 function show_meta_boxes() {
+	// TODO: Do we really need to add our own nonce?
 	?>
 	<input type="hidden" name="events_meta_box_nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ); ?>">
-	<p>
-		<label for="begin">Begins
-			<input type="datetime-local" name="begin" id="begin" class="regular-text" value="<?php echo get_value( 'begin' ); ?>">
-		</label>
-	</p>
-	<p>
-		<label for="end">Ends
-			<input type="datetime-local" name="end" id="end" class="regular-text" value="<?php echo get_value( 'end' ); ?>">
-		</label>
-	</p>
+	<table class="form-table" role="presentation">
+	<tbody>
+	<?php
+	$occurrence = get_occurrence();
+	// echo '<pre>' . print_r( $occurrence, true ) . '</pre>';
+	foreach ( $occurrence as $group => $values ) :
+		foreach ( $values as $key => $value ) :
+			$name = "occurrence[$group][$key]";
+			?>
+		<tr>
+			<th scope="row">			
+				<label for="<?php echo $name; ?>"><?php echo ucfirst( $key ); ?></label>
+			</th>
+			<td>
+			<input type="datetime-local" name="<?php echo $name; ?>" class="regular-text" value="<?php echo $value[0]; ?>">
+			</td>
+		</tr>
+			<?php
+		endforeach;
+	endforeach;
+	?>
+	</tbody>
+	</table>
 	<?php
 }
 
-/**
- * Helper to properly return the meta value without throwing errors when not set.
- */
-function get_value( $field ) {
+
+function get_occurrence() {
 	global $post;
-	$meta = get_post_meta( $post->ID );
-	return ( is_array( $meta ) && isset( $meta[ $field ] ) ) ? $meta[ $field ][0] : null;
+	$meta   = get_post_meta( $post->ID );
+	$result = [];
+	foreach ( $meta as $key => $value ) {
+		// Check if this field is part of a datetime set.
+		if ( strpos( $key, 'begin' ) || strpos( $key, 'end' ) ) {
+			$parts = explode( '_', $key );
+			// Check if there is already an array for this datetime set.
+			if ( array_key_exists( $parts[0], $result ) && ! is_array( $result[ $parts[0] ] ) ) {
+				$result[ $parts[0] ] = [];
+			}
+			$result[ $parts[0] ][ $parts[1] ] = $value;
+		}
+	}
+
+	return $result;
 }
 
 /**
  * Enable saving of custom fields.
  */
 add_action(
-	'save_post', function ( $post_id ) {
-		// verify nonce
+	'save_post', function ( $post_id, $post, $update ) {
+		// Don't save if request is missing nonce.
+		if ( ! array_key_exists( 'events_meta_box_nonce', $_POST ) ) {
+			return $post_id;
+		}
+
+		// Don't save if nonce is invalid.
 		if ( array_key_exists( 'events_meta_box_nonce', $_POST ) && ! wp_verify_nonce( $_POST['events_meta_box_nonce'], basename( __FILE__ ) ) ) {
 			return $post_id;
 		}
-		// check autosave
+
+		// Skip autosave.
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 			return $post_id;
 		}
-		// check permissions
-		if ( array_key_exists( 'post_type', $_POST ) && 'page' === $_POST['post_type'] ) {
-			if ( ! current_user_can( 'edit_page', $post_id ) ) {
-				return $post_id;
-			} elseif ( ! current_user_can( 'edit_post', $post_id ) ) {
-				return $post_id;
-			}
+
+		// Check post type.
+		if ( 'activity' !== $_POST['post_type'] ) {
+			return $post_id;
 		}
 
-		if ( array_key_exists( 'begin', $_POST ) && array_key_exists( 'end', $_POST ) ) {
-			$fields = array( 'begin', 'end' );
+		// Check permissions.
+		if ( 'activity' === $_POST['post_type'] && ! current_user_can( 'edit_page', $post_id ) ) {
+			return $post_id;
+		}
 
-			foreach ( $fields as $field ) {
-				$old = get_post_meta( $post_id, $field, true );
-				$new = $_POST[ $field ];
+		/**
+		 * Save each key of nested array inside of occurrence array.
+		 */
+		foreach ( $_POST['occurrence'] as $index => $occurrence ) {
+			foreach ( $occurrence as $key => $value ) {
+				$meta_key = $index . '_' . $key;
+				$new      = $value;
+				$old      = get_post_meta( $post_id, $meta_key, true );
 
 				if ( $new && $new !== $old ) {
-					update_post_meta( $post_id, $field, $new );
+					update_post_meta( $post_id, $meta_key, $new );
 				} elseif ( '' === $new && $old ) {
-					delete_post_meta( $post_id, $field, $old );
+					delete_post_meta( $post_id, $meta_key, $old );
 				}
 			}
 		}
-	}
+	}, 10, 3
 );
 
 /**
