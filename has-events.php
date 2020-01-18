@@ -90,7 +90,9 @@ function show_meta_boxes() {
 	<?php
 }
 
-
+/**
+ * Returns nested array of activity occurrence begin and end datetime set.
+ */
 function get_occurrence() {
 	global $post;
 	$meta   = get_post_meta( $post->ID );
