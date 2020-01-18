@@ -65,10 +65,9 @@ function show_meta_boxes() {
 	?>
 	<input type="hidden" name="events_meta_box_nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ); ?>">
 	<table class="form-table" role="presentation">
-	<tbody>
+	<tbody class="occurrences">
 	<?php
 	$occurrence = get_occurrence();
-	// echo '<pre>' . print_r( $occurrence, true ) . '</pre>';
 	foreach ( $occurrence as $group => $values ) :
 		foreach ( $values as $key => $value ) :
 			$name = "occurrence[$group][$key]";
@@ -87,6 +86,45 @@ function show_meta_boxes() {
 	?>
 	</tbody>
 	</table>
+	<input type="button" class="button tagadd" onclick="addAnother()" value="Add Another">
+	<script type="text/javascript">
+		let int = <?php echo ( $group + 1 ); ?>;
+		function addAnother(){
+			// Element to be appended.
+			const tbody = document.querySelector('.occurrences');
+
+			const types = ['begin', 'end'];
+			types.forEach(type => {
+				// Name used for this iteration.
+				const name = `occurrence[${int}][${type}]`;
+				// Create new row for below element.
+				const tr = document.createElement('tr');
+
+				// Create th with label.
+				const th = document.createElement('th');
+				th.classList.add('row');
+				const label = document.createElement('label');
+				label.setAttribute('for', name);
+				label.innerHTML = type.charAt(0).toUpperCase() + type.slice(1);
+
+				// Create td with input.
+				const td = document.createElement('td');
+				const input = document.createElement('input');
+				input.setAttribute('type', 'datetime-local');
+				input.classList.add('regular-text');
+				input.setAttribute('name', name);
+				input.setAttribute('value', '');
+
+				td.appendChild(input);
+				th.appendChild(label);
+
+				tr.appendChild(th);
+				tr.appendChild(td);
+				tbody.appendChild(tr);
+			})
+			int++;
+		}
+	</script>
 	<?php
 }
 
