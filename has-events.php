@@ -147,6 +147,11 @@ function get_occurrence() {
 		}
 	}
 
+	if(count($result) === 0){
+		$result[0]['begin'][0]='';
+		$result[0]['end'][0]= '';
+	}
+
 	return $result;
 }
 
