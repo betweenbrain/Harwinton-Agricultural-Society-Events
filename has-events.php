@@ -82,7 +82,7 @@ add_action(
 		add_meta_box(
 			'details', // $id
 			'Activity Dates', // $title
-			'show_meta_boxes', // $callback
+			'add_datetime_fields', // $callback
 			'activity', // $screen
 			'normal', // $context
 			'high' // $priority
@@ -93,7 +93,7 @@ add_action(
 /**
  * Add fields to custom meta box.
  */
-function show_meta_boxes() {
+function add_datetime_fields() {
 	// TODO: Do we really need to add our own nonce?
 	?>
 	<input type="hidden" name="events_meta_box_nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ); ?>">
