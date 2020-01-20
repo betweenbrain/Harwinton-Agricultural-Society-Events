@@ -74,7 +74,7 @@ add_action(
 );
 
 /**
- * Adds meta boxes to activities.
+ * Adds datetime fields to activities.
  */
 add_action(
 	'add_meta_boxes',
