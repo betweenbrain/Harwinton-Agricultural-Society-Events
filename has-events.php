@@ -393,17 +393,6 @@ function render_map( $term ) {
 		<input type="hidden" name="latLng" id="latLng" value="<?php echo property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : ''; ?>" >
 		<p>Click the map to set the exact location, or <a href="#" onclick="event.preventDefault(); geoLocate()"> use current location</a>.</p>
 	</div>
-	<?php
-}
-
-/**
- * Render Google Map in admin for choosing location.
- */
-add_action( 'location_edit_form', 'add_map_script', 10, 1 );
-add_action( 'location_add_form', 'add_map_script', 10, 1 );
-
-function add_map_script( $term ) {
-	?>
 	<style>
 		#map {
 			height: 400px;
