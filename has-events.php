@@ -301,7 +301,7 @@ add_action(
 		);
 
 		register_taxonomy(
-			'event', array('activity', 'vendor'), array(
+			'event', array( 'activity', 'vendor' ), array(
 				'hierarchical'          => false,
 				'labels'                => $labels,
 				'show_ui'               => true,
@@ -313,6 +313,16 @@ add_action(
 		);
 	},
 	0
+);
+
+/**
+ * Removes Add Activity sidebar menu item.
+ */
+add_action(
+	'admin_menu', function() {
+		global $submenu;
+		unset( $submenu['edit.php?post_type=activity'][10] );
+	}
 );
 
 /**
