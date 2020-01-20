@@ -210,47 +210,50 @@ function get_occurrence() {
  */
 add_action(
 	'save_post', function ( $post_id, $post, $update ) {
-		// Don't save if request is missing nonce.
-		if ( ! array_key_exists( 'events_meta_box_nonce', $_POST ) ) {
-			return $post_id;
-		}
+		if ( isset($_POST['post_type']) && 'activity' === $_POST['post_type'] ) {
+			// Don't save if request is missing nonce.
+			if ( ! array_key_exists( 'events_meta_box_nonce', $_POST ) ) {
+				return $post_id;
+			}
 
-		// Don't save if nonce is invalid.
-		if ( array_key_exists( 'events_meta_box_nonce', $_POST ) && ! wp_verify_nonce( $_POST['events_meta_box_nonce'], basename( __FILE__ ) ) ) {
-			return $post_id;
-		}
+			// Don't save if nonce is invalid.
+			if ( array_key_exists( 'events_meta_box_nonce', $_POST ) && ! wp_verify_nonce( $_POST['events_meta_box_nonce'], basename( __FILE__ ) ) ) {
+				return $post_id;
+			}
 
-		// Skip autosave.
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			return $post_id;
-		}
+			// Skip autosave.
+			if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+				return $post_id;
+			}
 
-		// Check post type.
-		if ( 'activity' !== $_POST['post_type'] ) {
-			return $post_id;
-		}
+			// Check post type.
+			if ( 'activity' !== $_POST['post_type'] ) {
+				return $post_id;
+			}
 
-		// Check permissions.
-		if ( 'activity' === $_POST['post_type'] && ! current_user_can( 'edit_page', $post_id ) ) {
-			return $post_id;
-		}
+			// Check permissions.
+			if ( 'activity' === $_POST['post_type'] && ! current_user_can( 'edit_page', $post_id ) ) {
+				return $post_id;
+			}
 
-		/**
-		 * Save each key of nested array inside of occurrence array.
-		 */
-		foreach ( $_POST['occurrence'] as $index => $occurrence ) {
-			foreach ( $occurrence as $key => $value ) {
-				$meta_key = $index . '_' . $key;
-				$new      = $value;
-				$old      = get_post_meta( $post_id, $meta_key, true );
+			/**
+			 * Save each key of nested array inside of occurrence array.
+			 */
+			foreach ( $_POST['occurrence'] as $index => $occurrence ) {
+				foreach ( $occurrence as $key => $value ) {
+					$meta_key = $index . '_' . $key;
+					$new      = $value;
+					$old      = get_post_meta( $post_id, $meta_key, true );
 
-				if ( $new && $new !== $old ) {
-					update_post_meta( $post_id, $meta_key, $new );
-				} elseif ( '' === $new && $old ) {
-					delete_post_meta( $post_id, $meta_key, $old );
+					if ( $new && $new !== $old ) {
+						update_post_meta( $post_id, $meta_key, $new );
+					} elseif ( '' === $new && $old ) {
+						delete_post_meta( $post_id, $meta_key, $old );
+					}
 				}
 			}
 		}
+		return;
 	}, 10, 3
 );
 
