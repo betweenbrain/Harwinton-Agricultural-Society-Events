@@ -147,9 +147,9 @@ function get_occurrence() {
 		}
 	}
 
-	if(count($result) === 0){
-		$result[0]['begin'][0]='';
-		$result[0]['end'][0]= '';
+	if ( count( $result ) === 0 ) {
+		$result[0]['begin'][0] = '';
+		$result[0]['end'][0]   = '';
 	}
 
 	return $result;
@@ -331,7 +331,7 @@ function render_map( $term ) {
 		<div id="map"></div>
 		<label for="latLng">Location</label>
 		<input type="hidden" name="latLng" id="latLng" value="<?php echo property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : ''; ?>" >
-		<p>Click the map to set the exact location.</p>
+		<p>Click the map to set the exact location, or <a href="#" onclick="event.preventDefault(); geoLocate()"> use current location</a>.</p>
 	</div>
 	<?php
 }
@@ -352,11 +352,12 @@ function add_script( $term ) {
 	</style>
 	<script>
 		const input = document.getElementById('latLng');
+		let map;
 		const markers = [];
 		const savedValue = '<?php echo property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : ''; ?>';
 
 		function initMap() {
-			const map = new google.maps.Map(document.getElementById('map'), {
+			map = new google.maps.Map(document.getElementById('map'), {
 				center: { lat: 41.763031, lng: -73.044465 },
 				zoom: 17.75
 			});
@@ -395,6 +396,37 @@ function add_script( $term ) {
 				input.setAttribute('value', '');
 			});
 		}
+
+		function geoLocate(){
+			const infoWindow = new google.maps.InfoWindow;
+
+			if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(function(position) {
+				var pos = {
+				lat: position.coords.latitude,
+				lng: position.coords.longitude
+				};
+
+				infoWindow.setPosition(pos);
+				infoWindow.setContent('Location found.');
+				infoWindow.open(map);
+				map.setCenter(pos);
+			}, function() {
+				handleLocationError(true, infoWindow, map.getCenter());
+			});
+			} else {
+			// Browser doesn't support Geolocation
+			handleLocationError(false, infoWindow, map.getCenter());
+			}
+		}
+
+		function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+			infoWindow.setPosition(pos);
+			infoWindow.setContent(browserHasGeolocation ?
+							  'Error: The Geolocation service failed.' :
+							  'Error: Your browser doesn\'t support geolocation.');
+			infoWindow.open(map);
+	  }
 	</script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo get_option( 'google_maps_api_key' ); ?>&callback=initMap"async defer></script>
 	<?php
