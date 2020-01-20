@@ -339,10 +339,10 @@ function render_map( $term ) {
 /**
  * Render Google Map in admin for choosing location.
  */
-add_action( 'location_edit_form', 'add_script', 10, 1 );
-add_action( 'location_add_form', 'add_script', 10, 1 );
+add_action( 'location_edit_form', 'add_map_script', 10, 1 );
+add_action( 'location_add_form', 'add_map_script', 10, 1 );
 
-function add_script( $term ) {
+function add_map_script( $term ) {
 	?>
 	<style>
 		#map {
