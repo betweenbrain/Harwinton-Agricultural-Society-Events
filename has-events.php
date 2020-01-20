@@ -41,7 +41,7 @@ add_action(
 );
 
 /**
- *
+ * Register vendor custom post type.
  */
 add_action(
 	'init', function () {
@@ -74,7 +74,7 @@ add_action(
 );
 
 /**
- * Adds meta boxes to activites.
+ * Adds meta boxes to activities.
  */
 add_action(
 	'add_meta_boxes',
