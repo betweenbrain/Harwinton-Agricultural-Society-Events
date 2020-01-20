@@ -41,6 +41,39 @@ add_action(
 );
 
 /**
+ *
+ */
+add_action(
+	'init', function () {
+		register_post_type(
+			'vendor', array(
+				'has_archive'       => true,
+				'labels'            => array(
+					'add_new'      => __( 'Add Vendor', 'hasEvents' ),
+					'add_new_item' => __( 'New Vendor', 'hasEvents' ),
+					'all_items'    => __( 'Vendors', 'hasEvents' ),
+					'edit_item'    => __( 'Edit Vendor', 'hasEvents' ),
+					'name'         => __( 'Vendors', 'hasEvents' ),
+				),
+				'public'            => true,
+				'show_in_menu'      => 'edit.php?post_type=activity',
+				'show_in_nav_menus' => true,
+				'supports'          => array(
+					'editor',
+					'excerpt',
+					'revisions',
+					'title',
+					'thumbnail',
+				),
+				'taxonomies'        => array(
+					'events',
+				),
+			)
+		);
+	}
+);
+
+/**
  * Adds meta boxes to activites.
  */
 add_action(
@@ -268,7 +301,7 @@ add_action(
 		);
 
 		register_taxonomy(
-			'event', 'activity', array(
+			'event', array('activity', 'vendor'), array(
 				'hierarchical'          => false,
 				'labels'                => $labels,
 				'show_ui'               => true,
