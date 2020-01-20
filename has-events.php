@@ -74,6 +74,23 @@ add_action(
 );
 
 /**
+ * Adds location map to vendor custom post type.
+ */
+add_action(
+	'add_meta_boxes',
+	function () {
+		add_meta_box(
+			'details', // $id
+			'Vendor Location', // $title
+			'render_map', // $callback
+			'vendor', // $screen
+			'normal', // $context
+			'high' // $priority
+		);
+	}
+);
+
+/**
  * Adds datetime fields to activities.
  */
 add_action(
