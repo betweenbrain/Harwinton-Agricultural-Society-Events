@@ -210,7 +210,7 @@ function get_occurrence() {
  */
 add_action(
 	'save_post', function ( $post_id, $post, $update ) {
-		if ( isset($_POST['post_type']) && 'activity' === $_POST['post_type'] ) {
+		if ( isset( $_POST['post_type'] ) && 'activity' === $_POST['post_type'] ) {
 			// Don't save if request is missing nonce.
 			if ( ! array_key_exists( 'events_meta_box_nonce', $_POST ) ) {
 				return $post_id;
@@ -251,6 +251,55 @@ add_action(
 						delete_post_meta( $post_id, $meta_key, $old );
 					}
 				}
+			}
+		}
+		return;
+	}, 10, 3
+);
+
+/**
+ * Enable saving of custom fields.
+ */
+add_action(
+	'save_post', function ( $post_id, $post, $update ) {
+		if ( isset( $_POST['post_type'] ) && 'vendor' === $_POST['post_type'] ) {
+
+			// Don't save if request is missing nonce.
+			if ( ! array_key_exists( 'has_events_nonce', $_POST ) ) {
+				return $post_id;
+			}
+
+			// Don't save if nonce is invalid.
+			if ( ! wp_verify_nonce( $_POST['has_events_nonce'], 'has-events' ) ) {
+				return $post_id;
+			}
+
+			// Skip autosave.
+			if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+				return $post_id;
+			}
+
+			// Check post type.
+			if ( 'vendor' !== $_POST['post_type'] ) {
+				return $post_id;
+			}
+
+			// Check permissions.
+			if ( 'vendor' === $_POST['post_type'] && ! current_user_can( 'edit_page', $post_id ) ) {
+				return $post_id;
+			}
+
+			/**
+			 * Save latLng.
+			 */
+			$meta_key = 'latLng';
+			$new      = $_POST['latLng'];
+			$old      = get_post_meta( $post_id, $meta_key, true );
+
+			if ( $new && $new !== $old ) {
+				update_post_meta( $post_id, $meta_key, $new );
+			} elseif ( '' === $new && $old ) {
+				delete_post_meta( $post_id, $meta_key, $old );
 			}
 		}
 		return;
@@ -381,19 +430,30 @@ function google_maps_api_key_callback() {
 }
 
 /**
- * Adds hidden Google Map latitude and longitude taxonomy field.
+ * Adds Google Map with latitude and longitude field.
  *
  * https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/
  */
 add_action( 'location_add_form_fields', 'render_map', 10, 1 );
 add_action( 'location_edit_form_fields', 'render_map', 10, 1 );
 
-function render_map( $term ) {
+function render_map( $obj ) {
+	$value = '';
+	switch ( true ) {
+		case ( property_exists( $obj, 'taxonomy' ) ):
+			$value = get_term_meta( $obj->term_id, 'latLng', true );
+			break;
+
+		case ( property_exists( $obj, 'post_type' ) ):
+			$value = get_post_meta( $obj->ID, 'latLng', true );
+			break;
+	}
 	?>
 	<div class="form-field term-location-wrap">
 		<div id="map"></div>
+		<?php wp_nonce_field( 'has-events', 'has_events_nonce' ); ?>
 		<label for="latLng">Location</label>
-		<input type="hidden" name="latLng" id="latLng" value="<?php echo property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : ''; ?>" >
+		<input type="hidden" name="latLng" id="latLng" value="<?php echo $value; ?>" >
 		<p>Click the map to set the exact location, or <a href="#" onclick="event.preventDefault(); geoLocate()"> use current location</a>.</p>
 	</div>
 	<style>
@@ -406,7 +466,7 @@ function render_map( $term ) {
 		const input = document.getElementById('latLng');
 		let map;
 		const markers = [];
-		const savedValue = '<?php echo property_exists( $term, 'term_id' ) ? get_term_meta( $term->term_id, 'latLng', true ) : ''; ?>';
+		const savedValue = '<?php echo $value; ?>';
 
 		function initMap() {
 			map = new google.maps.Map(document.getElementById('map'), {
