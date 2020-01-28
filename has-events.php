@@ -108,16 +108,22 @@ add_action(
 );
 
 /**
+ * Adds datetime field to event taxonomy.
+ */
+add_action( 'event_add_form_fields', 'add_datetime_fields', 10, 2 );
+add_action( 'event_edit_form_fields', 'add_datetime_fields', 10, 2 );
+
+/**
  * Add fields to custom meta box.
  */
-function add_datetime_fields() {
+function add_datetime_fields( $obj = null ) {
 	// TODO: Do we really need to add our own nonce?
 	?>
 	<input type="hidden" name="events_meta_box_nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ); ?>">
 	<table class="form-table" role="presentation">
 	<tbody class="occurrences">
 	<?php
-	$occurrence = get_occurrence();
+	$occurrence = get_occurrence( $obj );
 	foreach ( $occurrence as $group => $values ) :
 		foreach ( $values as $key => $value ) :
 			$name = "occurrence[$group][$key]";
@@ -181,23 +187,34 @@ function add_datetime_fields() {
 /**
  * Returns nested array of activity occurrence begin and end datetime set.
  */
-function get_occurrence() {
-	global $post;
-	$meta   = get_post_meta( $post->ID );
-	$result = [];
-	foreach ( $meta as $key => $value ) {
-		// Check if this field is part of a datetime set.
-		if ( strpos( $key, 'begin' ) || strpos( $key, 'end' ) ) {
-			$parts = explode( '_', $key );
-			// Check if there is already an array for this datetime set.
-			if ( array_key_exists( $parts[0], $result ) && ! is_array( $result[ $parts[0] ] ) ) {
-				$result[ $parts[0] ] = [];
+function get_occurrence( $obj ) {
+	$meta = '';
+	switch ( true ) {
+		case ( property_exists( $obj, 'taxonomy' ) ):
+			$meta = get_term_meta( $obj->term_id );
+			break;
+
+		case ( property_exists( $obj, 'post_type' ) ):
+			$meta = get_post_meta( $obj->ID );
+			break;
+	}
+
+	if ( $meta ) {
+		$result = [];
+		foreach ( $meta as $key => $value ) {
+			// Check if this field is part of a datetime set.
+			if ( strpos( $key, 'begin' ) || strpos( $key, 'end' ) ) {
+				$parts = explode( '_', $key );
+				// Check if there is already an array for this datetime set.
+				if ( array_key_exists( $parts[0], $result ) && ! is_array( $result[ $parts[0] ] ) ) {
+					$result[ $parts[0] ] = [];
+				}
+				$result[ $parts[0] ][ $parts[1] ] = $value;
 			}
-			$result[ $parts[0] ][ $parts[1] ] = $value;
 		}
 	}
 
-	if ( count( $result ) === 0 ) {
+	if ( ! $meta ) {
 		$result[0]['begin'][0] = '';
 		$result[0]['end'][0]   = '';
 	}
