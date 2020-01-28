@@ -584,3 +584,28 @@ function update_latLng( $term_id ) {
 		update_term_meta( $term_id, 'latLng', '' );
 	}
 }
+
+/**
+ * 
+ */
+add_action( 'created_event', 'save_occurrences', 10, 1 );
+add_action( 'edited_event', 'save_occurrences', 10, 1 );
+
+function save_occurrences( $term_id ) {
+			/**
+			 * Save each key of nested array inside of occurrence array.
+			 */
+	foreach ( $_POST['occurrence'] as $index => $occurrence ) {
+		foreach ( $occurrence as $key => $value ) {
+			$meta_key = $index . '_' . $key;
+			$new      = $value;
+			$old      = get_term_meta( $term_id , $meta_key, true );
+
+			if ( $new && $new !== $old ) {
+				update_term_meta( $term_id, $meta_key, $new );
+			} elseif ( '' === $new && $old ) {
+				delete_term_meta( $term_id, $meta_key, $old );
+			}
+		}
+	}
+}
