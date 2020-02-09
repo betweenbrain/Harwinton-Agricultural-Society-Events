@@ -107,6 +107,25 @@ add_action(
 	}
 );
 
+add_action( 'event_add_form_fields', 'add_wysiwyg_field', 10, 1 );
+add_action( 'event_edit_form_fields', 'add_wysiwyg_field', 10, 1 );
+
+function add_wysiwyg_field( $term = null ) {
+	?>
+	<tr valign="top">
+		<th scope="row">Description</th>
+		<td>
+			<?php wp_editor( is_object($term) ? html_entity_decode( $term->description ) : null, 'description', array( 'media_buttons' => false ) ); ?>
+			<script>
+				jQuery(window).ready(function(){
+					jQuery('.term-description-wrap').remove();
+				});
+			</script>
+		</td>
+	</tr>
+	<?php
+}
+
 /**
  * Adds datetime field to event taxonomy.
  */
@@ -586,7 +605,7 @@ function update_latLng( $term_id ) {
 }
 
 /**
- * 
+ *
  */
 add_action( 'created_event', 'save_occurrences', 10, 1 );
 add_action( 'edited_event', 'save_occurrences', 10, 1 );
@@ -599,7 +618,7 @@ function save_occurrences( $term_id ) {
 		foreach ( $occurrence as $key => $value ) {
 			$meta_key = $index . '_' . $key;
 			$new      = $value;
-			$old      = get_term_meta( $term_id , $meta_key, true );
+			$old      = get_term_meta( $term_id, $meta_key, true );
 
 			if ( $new && $new !== $old ) {
 				update_term_meta( $term_id, $meta_key, $new );
