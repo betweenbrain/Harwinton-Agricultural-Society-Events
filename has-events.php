@@ -113,17 +113,59 @@ add_action( 'event_edit_form_fields', 'add_wysiwyg_field', 10, 1 );
 function add_wysiwyg_field( $term = null ) {
 	?>
 	<tr valign="top">
-		<th scope="row">Description</th>
+		<th scope="row">Long Description</th>
 		<td>
-			<?php wp_editor( is_object($term) ? html_entity_decode( $term->description ) : null, 'description', array( 'media_buttons' => false ) ); ?>
-			<script>
-				jQuery(window).ready(function(){
-					jQuery('.term-description-wrap').remove();
-				});
-			</script>
+			<?php
+			wp_editor(
+				is_object( $term )
+				? html_entity_decode( get_term_meta( $term->term_id, 'long_description', true ) )
+				: null,
+				'long_description',
+				array( 'media_buttons' => true )
+			);
+			?>
 		</td>
 	</tr>
 	<?php
+}
+
+/**
+ * Save the custom long description field.
+ */
+add_action( 'created_event', 'save_long_description', 10, 1 );
+add_action( 'edited_event', 'save_long_description', 10, 1 );
+
+function save_long_description( $term_id ) {
+	$new      = $_POST['long_description'];
+	$old      = get_term_meta( $term_id, 'long_description', true );
+
+	if ( $new && $new !== $old ) {
+		update_term_meta( $term_id, 'long_description', $new );
+	} elseif ( '' === $new && $old ) {
+		delete_term_meta( $term_id, 'long_description', $old );
+	}
+}
+
+/**
+ * Save each occurrence.
+ */
+add_action( 'created_event', 'save_occurrences', 10, 1 );
+add_action( 'edited_event', 'save_occurrences', 10, 1 );
+
+function save_occurrences( $term_id ) {
+	foreach ( $_POST['occurrence'] as $index => $occurrence ) {
+		foreach ( $occurrence as $key => $value ) {
+			$meta_key = $index . '_' . $key;
+			$new      = $value;
+			$old      = get_term_meta( $term_id, $meta_key, true );
+
+			if ( $new && $new !== $old ) {
+				update_term_meta( $term_id, $meta_key, $new );
+			} elseif ( '' === $new && $old ) {
+				delete_term_meta( $term_id, $meta_key, $old );
+			}
+		}
+	}
 }
 
 /**
@@ -601,30 +643,5 @@ function update_latLng( $term_id ) {
 		update_term_meta( $term_id, 'latLng', $_POST['latLng'] );
 	} else {
 		update_term_meta( $term_id, 'latLng', '' );
-	}
-}
-
-/**
- *
- */
-add_action( 'created_event', 'save_occurrences', 10, 1 );
-add_action( 'edited_event', 'save_occurrences', 10, 1 );
-
-function save_occurrences( $term_id ) {
-			/**
-			 * Save each key of nested array inside of occurrence array.
-			 */
-	foreach ( $_POST['occurrence'] as $index => $occurrence ) {
-		foreach ( $occurrence as $key => $value ) {
-			$meta_key = $index . '_' . $key;
-			$new      = $value;
-			$old      = get_term_meta( $term_id, $meta_key, true );
-
-			if ( $new && $new !== $old ) {
-				update_term_meta( $term_id, $meta_key, $new );
-			} elseif ( '' === $new && $old ) {
-				delete_term_meta( $term_id, $meta_key, $old );
-			}
-		}
 	}
 }
